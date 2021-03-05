@@ -1,0 +1,6 @@
+.idea
+.gradle
+build
+
+output.fasta
+src/main/resources/*.fasta
