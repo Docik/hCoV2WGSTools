@@ -18,17 +18,29 @@ class FastaAggregator {
         File(OUTPUT_FILE_NAME).printWriter().use { out ->
             File(INPUT_DIRECTORY).walk().forEach { file ->
                 if (isFastaFile(file) && file != File(OUTPUT_FILE_NAME)) {
-                    println("Fasta file found: $file")
                     writeFileData(file, out)
                 }
             }
+        }
+
+        consoleReport()
+    }
+
+    private fun consoleReport() {
+        if (filter.isNotEmpty()) {
+            println("\nFasta files, not found for samples:")
+            filter.forEach { println(it) }
         }
     }
 
     private fun populateFilter() {
         val filterFile = File(FILTER_FILE_NAME)
         if (filterFile.exists()) {
-            filterFile.forEachLine { line -> filter.add(line) }
+            filterFile.forEachLine { line ->
+                if (line.isNotEmpty()) {
+                    filter.add(line.trim())
+                }
+            }
         }
     }
 
@@ -38,9 +50,10 @@ class FastaAggregator {
 
     private fun writeFileData(file: File, out: PrintWriter) {
         file.useLines { lines ->
+            var id = ""
             lines.forEach { line->
                 if (line.startsWith(">")) {
-                    val id = line.substringAfterLast("_")
+                    id = line.substring(line.indexOf('_') + 1)
                     if (filter.isNotEmpty() && !filter.contains(id)) {
                         println("Fasta file ignored by filter: $file")
                         return
@@ -49,6 +62,7 @@ class FastaAggregator {
                     out.println(getSequenceId(id, year))
                 } else {
                     out.println(line)
+                    filter.remove(id)
                 }
             }
         }
