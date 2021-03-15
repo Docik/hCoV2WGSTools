@@ -11,6 +11,7 @@ class FastaAggregator {
     }
 
     private val filter = mutableListOf<String>()
+    private var isFilterActive = false
 
     fun aggregate() {
         populateFilter()
@@ -37,8 +38,9 @@ class FastaAggregator {
         val filterFile = File(FILTER_FILE_NAME)
         if (filterFile.exists()) {
             filterFile.forEachLine { line ->
-                if (line.isNotEmpty()) {
+                if (line.trim().isNotEmpty()) {
                     filter.add(line.trim())
+                    isFilterActive = true
                 }
             }
         }
@@ -54,7 +56,7 @@ class FastaAggregator {
             lines.forEach { line->
                 if (line.startsWith(">")) {
                     id = line.substring(line.indexOf('_') + 1)
-                    if (filter.isNotEmpty() && !filter.contains(id)) {
+                    if (isFilterActive && !filter.contains(id)) {
                         println("Fasta file ignored by filter: $file")
                         return
                     }
